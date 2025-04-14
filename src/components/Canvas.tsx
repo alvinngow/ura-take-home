@@ -2,6 +2,15 @@ import { observer } from 'mobx-react-lite';
 import React, { useState } from 'react';
 import { EditorStore } from '../store/editorStore';
 import { ToolType } from '../types/enums';
+import {
+  dragImage,
+  isOverImage,
+  isOverResizeHandle,
+  resizeImage,
+  startDraggingImage,
+  startResizing,
+  stopResizing,
+} from '../store/imageHandler';
 
 interface CanvasProps {
   store: EditorStore;
@@ -37,19 +46,17 @@ const Canvas: React.FC<CanvasProps> = observer(({ store }) => {
     }
 
     if (store.selectedTool === ToolType.IMAGE && store.selectedLayerId) {
-      // Try resizing first
-      const isResizing = store.startResizing(x, y);
+      const isResizing = startResizing(store, x, y);
       if (isResizing) {
         setIsDragging(true);
         return;
       }
 
-      // Else, try dragging
       const selectedLayer = store.layers.find(
         (l) => l.id === store.selectedLayerId
       );
       if (selectedLayer?.type === ToolType.IMAGE) {
-        store.startDraggingImage(x, y);
+        startDraggingImage(store, x, y);
         setIsDragging(true);
       }
     }
@@ -65,14 +72,31 @@ const Canvas: React.FC<CanvasProps> = observer(({ store }) => {
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
     const { x, y } = getCoords(e);
-
+    const canvas = e.currentTarget;
     if (isDragging) {
       if (store.isResizing) {
-        store.resizeImage(x, y);
+        resizeImage(store, x, y);
+        canvas.style.cursor = 'nwse-resize';
       } else {
-        store.dragImage(x, y);
+        dragImage(store, x, y);
+        canvas.style.cursor = 'grabbing';
       }
+
+      return;
     }
+    const isOverHandle = isOverResizeHandle(store, x, y);
+    if (isOverHandle) {
+      canvas.style.cursor = 'nwse-resize';
+      return;
+    }
+
+    const isMouseOverImage = isOverImage(store, x, y);
+    if (isMouseOverImage) {
+      canvas.style.cursor = 'grab';
+      return;
+    }
+
+    canvas.style.cursor = 'default';
 
     store.continueDrawing(x, y);
   };
@@ -80,7 +104,7 @@ const Canvas: React.FC<CanvasProps> = observer(({ store }) => {
   const handleMouseUp = () => {
     if (isDragging) {
       setIsDragging(false);
-      store.stopResizing();
+      stopResizing(store);
     }
     store.endDrawing();
   };
@@ -88,7 +112,7 @@ const Canvas: React.FC<CanvasProps> = observer(({ store }) => {
   const handleMouseLeave = () => {
     if (isDragging) {
       setIsDragging(false);
-      store.stopResizing();
+      stopResizing(store);
     }
     store.endDrawing();
   };

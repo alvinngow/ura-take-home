@@ -2,12 +2,13 @@ import { makeAutoObservable } from 'mobx';
 import { ShapeType, ToolType } from '../types/enums';
 import {
   FillData,
+  ImageData,
   PenData,
   Point,
   ShapeData,
-  ImageData,
 } from '../types/layerData';
-import { ImageLayer, Layer } from '../types/layers';
+import { Layer } from '../types/layers';
+import { drawImageLayer } from './imageHandler';
 
 export class EditorStore {
   selectedTool: ToolType = ToolType.NONE;
@@ -80,11 +81,13 @@ export class EditorStore {
     img.src = url;
     img.onload = () => {
       this.uploadedImage = img;
+      const canvasWidth = this.canvas?.width ?? 0;
+      const canvasHeight = this.canvas?.height ?? 0;
 
       const data: ImageData = {
         image: img,
-        x: 0,
-        y: 0,
+        x: canvasWidth / 2,
+        y: canvasHeight / 2,
         scale: 1,
       };
 
@@ -93,8 +96,9 @@ export class EditorStore {
   }
 
   addLayer(type: ToolType, data: PenData | ShapeData | FillData | ImageData) {
+    const layerId = `layer-${this.layers.length + 1}`;
     const newLayer = {
-      id: `layer-${this.layers.length + 1}`,
+      id: layerId,
       name: `Layer ${this.layers.length + 1}`,
       type,
       visible: true,
@@ -102,6 +106,10 @@ export class EditorStore {
     };
 
     this.layers.push(newLayer as Layer);
+    if (type === ToolType.IMAGE) {
+      this.selectedLayerId = layerId;
+    }
+
     this.redrawCanvas();
 
     return newLayer;
@@ -126,10 +134,9 @@ export class EditorStore {
   redrawCanvas() {
     if (!this.ctx || !this.canvas) return;
 
-    // Clear canvas
-    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    this.ctx.fillStyle = 'white';
+    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
-    // Redraw each visible layer
     this.layers.forEach((layer) => {
       if (!layer.visible) return;
 
@@ -146,55 +153,13 @@ export class EditorStore {
         this.drawPath(data.points, data.color, data.size);
       } else if (layer.type === ToolType.IMAGE) {
         const data = layer.data as ImageData;
-        this.drawImageLayer(data.image, data.x, data.y, data.scale);
+        drawImageLayer(this, layer.id, data.image, data.x, data.y, data.scale);
       }
     });
 
     if (this.isDrawing && this.currentPoints.length > 0) {
       this.drawPath(this.currentPoints, this.selectedColor, this.penSize);
     }
-  }
-
-  drawImageLayer(image: HTMLImageElement, x: number, y: number, scale: number) {
-    if (!this.ctx) return;
-    const width = image.width * scale;
-    const height = image.height * scale;
-    this.ctx.drawImage(image, x - width / 2, y - height / 2, width, height);
-
-    const selectedLayer = this.layers.find(
-      (l) => l.id === this.selectedLayerId
-    );
-
-    if (selectedLayer) {
-      this.ctx.strokeStyle = 'black';
-      this.ctx.strokeRect(x + width / 2 - 8, y + height / 2 - 8, 16, 16);
-    }
-  }
-
-  startResizing(x: number, y: number) {
-    const layer = this.layers.find((l) => l.id === this.selectedLayerId);
-    if (!layer || layer.type !== ToolType.IMAGE) return;
-
-    const data = layer.data as ImageData;
-    const scale = data.scale ?? 1;
-    const width = data.image.width * scale;
-    const height = data.image.height * scale;
-
-    const handleX = data.x + width / 2;
-    const handleY = data.y + height / 2;
-
-    // 16x16 handle box
-    if (
-      x >= handleX - 8 &&
-      x <= handleX + 8 &&
-      y >= handleY - 8 &&
-      y <= handleY + 8
-    ) {
-      this.isResizing = true;
-      return true;
-    }
-
-    return false;
   }
 
   drawFill(color: string) {
@@ -306,62 +271,10 @@ export class EditorStore {
   selectLayer(layerId: string) {
     if (this.selectedLayerId == layerId) {
       this.selectedLayerId = null;
+
+      this.redrawCanvas();
     } else {
       this.selectedLayerId = layerId;
-    }
-  }
-
-  startDraggingImage(x: number, y: number) {
-    const layer = this.layers.find((l) => l.id === this.selectedLayerId);
-    const data = layer?.data as ImageData;
-
-    const img = data.image as HTMLImageElement;
-    const imgX = data.x;
-    const imgY = data.y;
-    const halfW = img.width / 2;
-    const halfH = img.height / 2;
-
-    if (
-      x >= imgX - halfW &&
-      x <= imgX + halfW &&
-      y >= imgY - halfH &&
-      y <= imgY + halfH
-    ) {
-      this.dragOffset = { x: x - imgX, y: y - imgY };
-      return;
-    }
-  }
-
-  resizeImage(x: number, y: number) {
-    const layer = this.layers.find((l) => l.id === this.selectedLayerId);
-    if (!layer || layer.type !== ToolType.IMAGE) return;
-
-    const data = layer.data as ImageData;
-    const dx = x - data.x;
-    const dy = y - data.y;
-    const newScale = Math.max(
-      0.1,
-      Math.min(3, Math.max(dx / data.image.width, dy / data.image.height))
-    );
-    data.scale = newScale;
-
-    this.redrawCanvas();
-  }
-
-  stopResizing() {
-    this.isResizing = false;
-  }
-
-  dragImage(x: number, y: number) {
-    console.log('DRAGGING');
-    if (!this.selectedLayerId) return;
-    const layer = this.layers.find(
-      (l) => l.id === this.selectedLayerId
-    ) as ImageLayer;
-    if (layer) {
-      layer.data.x = x - this.dragOffset.x;
-      layer.data.y = y - this.dragOffset.y;
-      this.redrawCanvas();
     }
   }
 }
