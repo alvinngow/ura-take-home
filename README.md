@@ -9,8 +9,8 @@ A simple web-based picture editing app built with React, TypeScript, and MobX. U
 ### 🎨 Drawing Tools
 
 - **Shape Tool** – Add customizable circles, rectangles, and triangles anywhere on the canvas
-- **Pen Tool** – Freeform drawing with adjustable pen size and color
 - **Fill Tool** – Fill the entire canvas background with a selected color
+- **Pen Tool** – Freeform drawing with adjustable pen size and color
 
 ### 🖼️ Image Handling
 
@@ -38,7 +38,7 @@ A simple web-based picture editing app built with React, TypeScript, and MobX. U
 
 ## 🧰 Tech Stack
 
-- **React** (with Hooks)
+- **React**
 - **TypeScript**
 - **MobX** for state management
 - **Tailwind CSS** + optional raw CSS
