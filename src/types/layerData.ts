@@ -6,24 +6,25 @@ export interface Point {
 }
 
 export type PenData = {
-  points: Point[],
-  color: string,
-  size: number
-}
+  points: Point[];
+  color: string;
+  size: number;
+};
 
 export type ShapeData = {
-  x: number,
-  y: number,
-  shape: ShapeType,
-  color: string
-}
+  x: number;
+  y: number;
+  shape: ShapeType;
+  color: string;
+};
 
 export type FillData = {
-  color:string
-}
+  color: string;
+};
 
 export type ImageData = {
-  x: number,
-  y: number,
-  image: HTMLImageElement
-}
+  x: number;
+  y: number;
+  image: HTMLImageElement;
+  scale: number;
+};

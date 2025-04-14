@@ -122,19 +122,20 @@ const ControlPanel: React.FC<ControlPanelProps> = observer(({ store }) => {
         </div>
       )}
       {store.selectedTool === ToolType.IMAGE && (
-        <div className='option-section'>
-          <h4 className='text-lg font-semibold pb-3 mb-4 border-b border-gray-300'>
+        <div className='flex justify-center'>
+          <label className='inline-block px-4 py-2 bg-gray-600 text-white rounded cursor-pointer hover:bg-gray-700 transition'>
             Upload Image
-          </h4>
-          <input
-            type='file'
-            accept='image/*'
-            onChange={(e) => {
-              if (e.target.files && e.target.files[0]) {
-                store.setUploadedImage(e.target.files[0]);
-              }
-            }}
-          />
+            <input
+              type='file'
+              accept='image/*'
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  store.setUploadedImage(e.target.files[0]);
+                }
+              }}
+              className='hidden'
+            />
+          </label>
         </div>
       )}
     </div>

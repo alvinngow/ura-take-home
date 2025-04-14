@@ -23,11 +23,16 @@ const LayersPanel: React.FC<LayersPanelProps> = observer(({ store }) => {
             .map((layer) => (
               <div
                 key={layer.id}
-                className={`flex items-center p-2 bg-white border ${
+                className={`flex items-center p-2  border ${
                   layer.visible
                     ? 'border-gray-300'
                     : 'border-gray-200 opacity-50'
-                } rounded`}
+                }  ${
+                  store.selectedLayerId === layer.id
+                    ? 'bg-gray-600 text-white'
+                    : 'bg-white'
+                } cursor-pointer rounded`}
+                onClick={() => store.selectLayer(layer.id)}
               >
                 <button
                   className='mr-3 text-lg'
@@ -37,7 +42,13 @@ const LayersPanel: React.FC<LayersPanelProps> = observer(({ store }) => {
                 </button>
                 <div className='flex-1'>
                   <span className='block font-medium'>{layer.name}</span>
-                  <span className='block text-xs text-gray-500'>
+                  <span
+                    className={`block text-xs  ${
+                      store.selectedLayerId === layer.id
+                        ? ' text-white'
+                        : 'text-gray-500'
+                    }`}
+                  >
                     {layer.type}
                   </span>
                 </div>
