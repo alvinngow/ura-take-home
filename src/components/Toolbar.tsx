@@ -3,6 +3,7 @@ import React from 'react';
 import { EditorStore } from '../store/editorStore';
 import { ToolType } from '../types/enums';
 import {
+  IconArrowBackUp,
   IconBucketDroplet,
   IconDeviceFloppy,
   IconPencil,
@@ -63,7 +64,20 @@ const Toolbar: React.FC<ToolbarProps> = observer(({ store }) => {
           <span>Image</span>
         </button>
       </div>
-      <div>
+      <div className='flex'>
+        {store.layerHistory.length > 0 && (
+          <button
+            onClick={() => store.undo()}
+            className={`flex flex-col items-center px-4 py-2 mr-2 rounded ${
+              store.selectedTool === ToolType.IMAGE
+                ? 'bg-gray-600'
+                : 'bg-transparent hover:bg-gray-600'
+            } text-white`}
+          >
+            <IconArrowBackUp />
+            <span>Undo</span>
+          </button>
+        )}
         <button
           className={`flex flex-col items-center px-4 py-2 mr-2 rounded ${
             store.selectedTool === ToolType.IMAGE

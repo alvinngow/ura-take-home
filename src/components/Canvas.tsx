@@ -60,14 +60,6 @@ const Canvas: React.FC<CanvasProps> = observer(({ store }) => {
         setIsDragging(true);
       }
     }
-
-    // Only trigger click for SHAPE or FILL
-    if (
-      store.selectedTool === ToolType.SHAPE ||
-      store.selectedTool === ToolType.FILL
-    ) {
-      store.handleCanvasClick(x, y);
-    }
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {

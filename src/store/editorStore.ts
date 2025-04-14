@@ -26,7 +26,7 @@ export class EditorStore {
   currentPoints: Point[] = [];
   uploadedImage: HTMLImageElement | null = null;
   dragOffset: { x: number; y: number } = { x: 0, y: 0 };
-
+  layerHistory: Layer[][] = [];
   constructor() {
     makeAutoObservable(this);
   }
@@ -96,6 +96,8 @@ export class EditorStore {
   }
 
   addLayer(type: ToolType, data: PenData | ShapeData | FillData | ImageData) {
+    this.pushHistory();
+
     const layerId = `layer-${this.layers.length + 1}`;
     const newLayer = {
       id: layerId,
@@ -116,6 +118,7 @@ export class EditorStore {
   }
 
   deleteLayer(layerId: string) {
+    this.pushHistory();
     const layer = this.layers.find((l) => l.id === layerId);
     if (layer) {
       this.layers = this.layers.filter((layer) => layer.id !== layerId);
@@ -275,6 +278,24 @@ export class EditorStore {
       this.redrawCanvas();
     } else {
       this.selectedLayerId = layerId;
+    }
+  }
+
+  pushHistory() {
+    const snapshot = this.layers.map((layer) => ({
+      ...layer,
+      data: JSON.parse(JSON.stringify(layer.data)),
+    }));
+    this.layerHistory.push(snapshot);
+  }
+
+  undo() {
+    if (this.layerHistory.length === 0) return;
+
+    const prevLayers = this.layerHistory.pop();
+    if (prevLayers) {
+      this.layers = prevLayers;
+      this.redrawCanvas();
     }
   }
 }

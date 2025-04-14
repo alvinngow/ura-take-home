@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import React, { useLayoutEffect, useMemo } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo } from 'react';
 import Canvas from './components/Canvas';
 import ControlPanel from './components/ControlPanel';
 import LayersPanel from './components/LayersPanel';
@@ -8,7 +8,16 @@ import { EditorStore } from './store/editorStore';
 
 const App: React.FC = observer(() => {
   const editorStore = useMemo(() => new EditorStore(), []);
-  console.log('🚀 ~ constApp:React.FC=observer ~ editorStore:', editorStore);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+        editorStore.undo();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [editorStore]);
 
   useLayoutEffect(() => {
     const canvas = document.getElementById('main-canvas') as HTMLCanvasElement;
